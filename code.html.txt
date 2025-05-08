@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Decoding Emotion Through Sentiment Analysis</title>
+<style>
+  /* Reset and base */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #5b86e5, #36d1dc);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 600px;
+    max-width: 350px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 20px;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  header h1 {
+    font-size: 1.6rem;
+    margin-bottom: 8px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  header p {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #e0f7fa;
+    margin: 0 10px;
+  }
+  textarea {
+    width: 100%;
+    height: 140px;
+    resize: vertical;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    font-size: 1rem;
+    font-family: inherit;
+    box-shadow: inset 0 0 10px rgba(255,255,255,0.2);
+    background-color: rgba(255,255,255,0.15);
+    color: #fff;
+    transition: background-color 0.3s ease;
+  }
+  textarea::placeholder {
+    color: #d0f0f7;
+  }
+  textarea:focus {
+    outline: none;
+    background-color: rgba(255,255,255,0.3);
+  }
+  button {
+    margin-top: 12px;
+    width: 100%;
+    padding: 14px 0;
+    font-weight: 700;
+    font-size: 1.1rem;
+    background: #ff6f61;
+    border: none;
+    border-radius: 30px;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 8px 15px rgba(255,111,97,0.4);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+  }
+  button:hover {
+    background: #ff5843;
+    box-shadow: 0 10px 20px rgba(255,88,67,0.6);
+  }
+  .results {
+    margin-top: 20px;
+    width: 100%;
+    background: rgba(255,255,255,0.15);
+    border-radius: 16px;
+    padding: 15px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.15);
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+  .emotion {
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    text-align: center;
+    text-shadow: 0 0 6px rgba(255,255,255,0.8);
+  }
+  .sentiment {
+    font-weight: 600;
+    margin-top: 10px;
+    text-align: center;
+    padding: 8px 0;
+    border-radius: 12px;
+  }
+  .positive {
+    background-color: rgba(103, 194, 58, 0.8);
+    color: white;
+  }
+  .negative {
+    background-color: rgba(232, 72, 85, 0.85);
+    color: white;
+  }
+  .neutral {
+    background-color: rgba(128, 128, 128, 0.7);
+    color: white;
+  }
+  .feedback {
+    margin-top: 15px;
+    padding: 12px 15px;
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 16px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    color: #222;
+    box-shadow: 0 0 10px rgba(255,255,255,0.35);
+  }
+  footer {
+    margin-top: auto;
+    font-size: 0.75rem;
+    color: #cde7f0;
+    text-align: center;
+    padding: 10px 0 6px;
+  }
+  @media (max-width: 380px) {
+    body {
+      padding: 15px 12px;
+      min-height: 600px;
+      max-width: 340px;
+    }
+    button {
+      font-size: 1rem;
+    }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Decoding Emotion</h1>
+  <p>Sentiment Analysis of Social Media Conversation</p>
+</header>
+
+<textarea id="inputText" placeholder="Paste social media conversation here..." aria-label="Input social media conversation"></textarea>
+<button id="analyzeBtn" aria-label="Analyze sentiment and emotion">Analyze</button>
+
+<div id="results" class="results" aria-live="polite" aria-atomic="true" hidden></div>
+<div id="feedback" class="feedback" hidden></div>
+
+<footer>
+  &copy; 2024 Decoding Emotion Project
+</footer>
+
+<script>
+  (function(){
+    // Emotions keywords
+    const emotionsKeywords = {
+      happy: ['happy', 'joy', 'joyful', 'glad', 'excited', 'great', 'yay', 'love', 'smile', 'good', 'wonderful', 'awesome', 'amazing', 'delighted','fun','haha'],
+      sad: ['sad', 'unhappy', 'sorrow', 'depressed', 'miserable', 'tear', 'cry', 'so sad', 'hurt', 'bad', 'upset', 'unloved', 'tragic', 'sorry'],
+      angry: ['angry', 'mad', 'furious', 'hate', 'annoyed', 'irritated', 'frustrated', 'rage', 'disgust', 'pissed', 'upset', 'annoying', 'aggressive', 'offended'],
+      fear: ['scared', 'fear', 'afraid', 'worried', 'anxious', 'nervous', 'panic', 'terrified', 'frightened', 'concerned', 'uneasy'],
+      surprise: ['surprised', 'amazed', 'astonished', 'shocked', 'wow', 'unbelievable', 'unexpected', 'whoa', 'oh no'],
+      neutral: ['ok', 'fine', 'meh', 'average', 'neutral', 'normal', 'so so', 'whatever', 'nothing special']
+    };
+
+    // Sentiment keywords (positive, negative, neutral)
+    const sentimentKeywords = {
+      positive: ['happy','joy','great','love','wonderful','awesome','amazing','excited','delighted','fun','good','smile','yay','haha'],
+      negative: ['sad','angry','hate','bad','upset','frustrated','depressed','annoyed','furious','cry','pissed','terrible','awful','disgust','fear','scared'],
+    };
+
+    // Simple emoji to emotion mapping (common social emojis)
+    const emojiEmotionMap = {
+      '😀': 'happy',
+      '😃': 'happy',
+      '😄': 'happy',
+      '😁': 'happy',
+      '😆': 'happy',
+      '😊': 'happy',
+      '😅': 'happy',
+      '😂': 'happy',
+      '🤣': 'happy',
+      '😍': 'happy',
+      '😇': 'happy',
+      '😐': 'neutral',
+      '😑': 'neutral',
+      '😶': 'neutral',
+      '🙂': 'neutral',
+      '😏': 'neutral',
+      '😞': 'sad',
+      '😔': 'sad',
+      '😟': 'sad',
+      '😢': 'sad',
+      '😭': 'sad',
+      '😤': 'angry',
+      '😠': 'angry',
+      '😡': 'angry',
+      '🤬': 'angry',
+      '😖': 'fear',
+      '😧': 'fear',
+      '😨': 'fear',
+      '😰': 'fear',
+      '😱': 'fear',
+      '😳': 'fear',
+      '😲': 'surprise',
+      '🤯': 'surprise',
+      '😮': 'surprise',
+      '😵': 'surprise',
+      '🤔': 'neutral',
+      '😬': 'neutral',
+      '😴': 'neutral',
+      '🤗': 'happy',
+      '🤐': 'neutral'
+      // Add more as needed
+    };
+
+    // Positive feedback messages for negative sentiment
+    const positiveConcerns = [
+      "Everyone goes through tough times, but remember, brighter days are ahead! ❤️",
+      "Stay strong! You are not alone, and things will get better. 🌟",
+      "Take a deep breath and keep going. Challenges help us grow. 💪",
+      "Sending positive vibes your way! You've got this! ✨",
+      "It's okay to feel down sometimes. Take care of yourself! 🌈",
+      "Remember your strengths and keep shining! ☀️"
+    ];
+
+    function analyzeText(text) {
+      const normalized = text.toLowerCase();
+
+      // Count word-based emotion matches
+      const emotionCounts = {};
+      for (const emotion in emotionsKeywords) {
+        emotionCounts[emotion] = 0;
+        emotionsKeywords[emotion].forEach(word => {
+          const regex = new RegExp('\\b' + escapeRegExp(word) + '\\b', 'gi');
+          const matches = normalized.match(regex);
+          if (matches) {
+            emotionCounts[emotion] += matches.length;
+          }
+        });
+      }
+
+      // Count emoji-based emotions
+      for (const char of text) {
+        if (emojiEmotionMap[char]) {
+          emotionCounts[emojiEmotionMap[char]] = (emotionCounts[emojiEmotionMap[char]] || 0) + 1;
+        }
+      }
+
+      // Determine dominant emotion(s)
+      let maxCount = 0;
+      let dominantEmotions = [];
+      for (const emotion in emotionCounts) {
+        if (emotionCounts[emotion] > maxCount) {
+          maxCount = emotionCounts[emotion];
+          dominantEmotions = [emotion];
+        } else if (emotionCounts[emotion] === maxCount && maxCount > 0) {
+          dominantEmotions.push(emotion);
+        }
+      }
+      if(maxCount === 0) {
+        dominantEmotions = ['neutral'];
+      }
+
+      // Sentiment analysis: count positive and negative words + emojis
+      let posCount = 0;
+      sentimentKeywords.positive.forEach(word => {
+        const regex = new RegExp('\\b' + escapeRegExp(word) + '\\b', 'gi');
+        const matches = normalized.match(regex);
+        if (matches) posCount += matches.length;
+      });
+      let negCount = 0;
+      sentimentKeywords.negative.forEach(word => {
+        const regex = new RegExp('\\b' + escapeRegExp(word) + '\\b', 'gi');
+        const matches = normalized.match(regex);
+        if (matches) negCount += matches.length;
+      });
+      // Consider emojis in sentiment count (happy emojis add positive, fearful/angry/sad add negative)
+      for (const char of text) {
+        if (['😀','😃','😄','😁','😆','😊','😅','😂','🤣','😍','😇','🤗','😎','🙂'].includes(char)) posCount++;
+        else if (['😞','😔','😟','😢','😭','😤','😠','😡','🤬','😖','😧','😨','😰','😱','😳'].includes(char)) negCount++;
+      }
+
+      let sentiment = 'neutral';
+      if (posCount > negCount) sentiment = 'positive';
+      else if (negCount > posCount) sentiment = 'negative';
+
+      return {
+        dominantEmotions,
+        sentiment,
+        posCount,
+        negCount
+      };
+    }
+
+    // Escape RegExp helper
+    function escapeRegExp(string) {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function displayResults({dominantEmotions, sentiment}) {
+      const resultsDiv = document.getElementById('results');
+      const feedbackDiv = document.getElementById('feedback');
+      resultsDiv.hidden = false;
+      feedbackDiv.hidden = false;
+
+      // Emotion display logic with emojis and colors
+      const emojiMap = {
+        happy: '😊',
+        sad: '😢',
+        angry: '😠',
+        fear: '😨',
+        surprise: '😲',
+        neutral: '😐'
+      };
+
+      // Compose emotions output string:
+      const emotionStr = dominantEmotions.map(e => {
+        const emoji = emojiMap[e] || '';
+        return `${emoji} ${capitalizeFirstLetter(e)}`;
+      }).join(', ');
+
+      // Sentiment colors/classes
+      let sentimentClass = 'neutral';
+      if(sentiment === 'positive') sentimentClass = 'positive';
+      else if(sentiment === 'negative') sentimentClass = 'negative';
+
+      resultsDiv.innerHTML = `
+        <div class="emotion" aria-label="Detected emotions">${emotionStr}</div>
+        <div class="sentiment ${sentimentClass}" aria-label="Overall sentiment">${capitalizeFirstLetter(sentiment)} Sentiment</div>
+      `;
+
+      // Provide additional feedback and encouragement for negative sentiment
+      if (sentiment === 'negative') {
+        const positiveMessage = positiveConcerns[Math.floor(Math.random() * positiveConcerns.length)];
+        feedbackDiv.textContent = positiveMessage;
+      } else if (sentiment === 'positive') {
+        feedbackDiv.textContent = "Great to see positive vibes! Keep spreading the joy! 🌈";
+      } else {
+        feedbackDiv.textContent = "Thanks for sharing. Every emotion is valid. Stay balanced! ⚖️";
+      }
+    }
+
+    function capitalizeFirstLetter(string) {
+      return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+
+    document.getElementById('analyzeBtn').addEventListener('click', () => {
+      const inputText = document.getElementById('inputText').value.trim();
+      const resultsDiv = document.getElementById('results');
+      const feedbackDiv = document.getElementById('feedback');
+      if (inputText.length === 0) {
+        resultsDiv.hidden = true;
+        feedbackDiv.hidden = true;
+        alert('Please enter some text for analysis.');
+        return;
+      }
+      const analysis = analyzeText(inputText);
+      displayResults(analysis);
+    });
+  })();
+</script>
+</body>
+</html>
+</content>
+</create_file>
