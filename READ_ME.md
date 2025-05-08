@@ -52,20 +52,6 @@ emotion-analysis/
 
 ---
 
-## ▶️ How to Run
-
-1. **Install Dependencies**
-```bash
-pip install -r requirements.txt
-```
-
-2. **Run the Program**
-```bash
-python main.py
-```
-
----
-
 ## 📊 Sample Output
 
 - Classification reports showing precision, recall, and F1-score
@@ -85,11 +71,14 @@ A sample dataset is provided in the `data/` folder. For a larger real-world data
 
 ## 🙌 Contributors
 
-- Mohamed Ashik – Data cleaning, modeling, documentation
-- [Add teammates here]
+- A. MOHAMED ASHIK – Data cleaning, modeling, documentation.
+- V. VISHNUVASAN   – Project Manager & Analyst	Define project scope, oversee workflow, and coordinate tasks.
+- K.LINGESHWARAN   – Data Engineer	Handle data collection from APIs (Twitter/Reddit), preprocessing and storage.
+- A. SIBIRAJ       – NLP & ML Specialist	Build and evaluate ML/NLP models, tune parameters, and compare performance.
+
 
 ---
 
 ## 📬 Contact
 
-For queries or contributions, reach out via GitHub Issues or [Your Email].
+For queries or contributions, reach out via GitHub Issues or [ashmelllow10@gmail.com].
